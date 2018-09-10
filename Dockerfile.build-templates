@@ -1,4 +1,4 @@
-FROM 999eagle/999eagle/godot-mono-build-server:build-mono-glue
+FROM 999eagle/godot-mono-build-server:build-mono-glue
 
 RUN cd /build/godot-src/src && \
 	scons -j 6 platform=x11 target=release_debug tools=no bits=64 module_mono_enabled=yes && \
