@@ -1,0 +1,24 @@
+FROM 999eagle/godot-mono-build-server:base
+ARG GODOT_VERSION=3.0.6
+RUN apt-get -y install build-essential scons pkg-config libx11-dev libxcursor-dev libxinerama-dev \
+	libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev libfreetype6-dev libssl-dev libudev-dev \
+	libxi-dev libxrandr-dev mingw-w64
+
+RUN mkdir -p /build/godot-src && \
+	cd /build/godot-src && \
+	wget "https://github.com/godotengine/godot/archive/${GODOT_VERSION}-stable.tar.gz" -O "src.tar.gz" && \
+	tar -xzf src.tar.gz && \
+	rm src.tar.gz && \
+	mv godot-${GODOT_VERSION}-stable src
+
+RUN	cd /build/godot-src/godot-${GODOT_VERSION}-stable && \
+	scons -j 6 platform=server target=release_debug tools=yes bits=64 module_mono_enabled=yes mono_glue=no && \
+	bin/godot_server.server.opt.tools.64.mono --generate-mono-glue modules/mono/glue && \
+	scons -j 6 platform=server target=release_debug tools=yes bits=64 module_mono_enabled=yes
+
+RUN cd /build/godot-src/godot-${GODOT_VERSION}-stable && \
+	scons -j 6 platform=x11 target=release_debug tools=no bits=64 module_mono_enabled=yes && \
+	scons -j 6 platform=x11 target=release tools=no bits=64 module_mono_enabled=yes
+
+RUN mkdir -p /build/bin && \
+	cp /build/godot-src/godot-${GODOT_VERSION}-stable/bin/* /build/bin
